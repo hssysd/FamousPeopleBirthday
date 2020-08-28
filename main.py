@@ -5,7 +5,7 @@ from trello import TrelloApi
 
 from urllib import request
 from urllib import parse
-import webbrowser
+import sys
 import requests
 import re
 import bs4
@@ -103,7 +103,7 @@ def extractBirthDays(ul: bs4.element.Tag):
 
         yearstr = b.yearstr if b.year == YEAR_UNKNOWN else str(b.year)
 
-        print( yearstr + ": " + b.name + "(" + b.occupation + ")" )
+        print( yearstr + ": " + b.name + "    (" + b.occupation + ")" )
 
         ret.append(b)
 
@@ -111,9 +111,36 @@ def extractBirthDays(ul: bs4.element.Tag):
 
 # main program
 
+month: int = 1
+day: int = 1
+
 now = datetime.now()
 month = now.month
 day = now.day
+
+# 引数で指定があった場合
+args = sys.argv
+if len(args) > 1:
+    matchobj = re.match(r'(\d+)/(\d+)', args[1])
+    if matchobj is None:
+        print("Error: mm/dd 形式で指定してください: -> " + args[1])
+        exit(1)
+
+    m = matchobj.group(1)
+    d = matchobj.group(2)
+    month = int(m)
+    day = int(d)
+
+    if month < 1 or month > 12:
+        print("Error: '月' の値が不正です -> " + m)
+        exit(1)
+    # TODO: 次ごとに最大の日が違う
+    if day < 1 or day > 31:
+        print("Error: '日' の値が不正です -> " + d)
+        exit(1)
+
+
+
 
 daystr = f"{month}月{day}日"
 
@@ -128,6 +155,3 @@ bs: bs4.BeautifulSoup = fetchHtml(url)
 birthdayUl = findBirthdayList(bs)
 
 birthdays = extractBirthDays( birthdayUl )
-
-print("done.")
-

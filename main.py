@@ -9,6 +9,7 @@ import webbrowser
 import requests
 import re
 import bs4
+from datetime import datetime
 
 YEAR_UNKNOWN: int = -1
 
@@ -110,11 +111,16 @@ def extractBirthDays(ul: bs4.element.Tag):
 
 # main program
 
-month = 10
-day = 10
+now = datetime.now()
+month = now.month
+day = now.day
 
-urlenc = parse.quote( str(month) + "月" + str(day) + "日" )
-url = "https://ja.wikipedia.org/wiki/" + urlenc
+daystr = f"{month}月{day}日"
+
+daystrenc = parse.quote( daystr )
+url = f"https://ja.wikipedia.org/wiki/{daystrenc}"
+
+print( f"{daystr} 誕生日の有名人" )
 
 bs: bs4.BeautifulSoup = fetchHtml(url)
 # bs: bs4.BeautifulSoup = fetchHtmlFromFile('example.html')
@@ -122,8 +128,6 @@ bs: bs4.BeautifulSoup = fetchHtml(url)
 birthdayUl = findBirthdayList(bs)
 
 birthdays = extractBirthDays( birthdayUl )
-
-
 
 print("done.")
 

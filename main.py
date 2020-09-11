@@ -6,6 +6,7 @@ import sys
 import requests
 import re
 import bs4
+import calendar
 from datetime import datetime
 
 YEAR_UNKNOWN: int = -1
@@ -88,7 +89,7 @@ def findBirthdayList( bs: bs4.BeautifulSoup ) -> bs4.element.Tag:
     return sibling
 
 
-def extractBirthDays(ul: bs4.element.Tag):
+def extractBirthDays(ul: bs4.element.Tag) -> list:
 
     ret = []
 
@@ -106,11 +107,12 @@ def extractBirthDays(ul: bs4.element.Tag):
 
     return ret
 
-def parse_commandline( args ) -> (int, int):
-    if len(args) > 1:
-        matchobj = re.match(r'(\d+)/(\d+)', args[1])
+def parse_commandline( args:list ) -> (int, int):
+    
+    if args is not None and len(args) >= 1:
+        matchobj = re.match(r'(-?\d+)/(-?\d+)', args[0])
         if matchobj is None:
-            print("Error: mm/dd 形式で指定してください: -> " + args[1])
+            print("Error: mm/dd 形式で指定してください: -> " + args[0])
             return None, None
 
         m = matchobj.group(1)
@@ -121,8 +123,10 @@ def parse_commandline( args ) -> (int, int):
         if month < 1 or month > 12:
             print("Error: '月' の値が不正です -> " + m)
             return None, None
-        # TODO: 次ごとに最大の日が違う
-        if day < 1 or day > 31:
+        
+        maxDay = calendar.monthrange( 2020, month )[1]
+        
+        if day < 1 or day > maxDay:
             print("Error: '日' の値が不正です -> " + d)
             return None, None
 
@@ -132,23 +136,31 @@ def parse_commandline( args ) -> (int, int):
         month = now.month
         day = now.day
         return month, day
+    
+        
+def main_process(args:list) -> (int):
+
+    month, day = parse_commandline( args )
+    if month is None or day is None:
+        return 1
+
+    daystr = f"{month}月{day}日"
+
+    daystrenc = parse.quote( daystr )
+    url = f"https://ja.wikipedia.org/wiki/{daystrenc}"
+
+    print( f"{daystr} 誕生日の有名人" )
+
+    bs: bs4.BeautifulSoup = fetchHtml(url)
+    # bs: bs4.BeautifulSoup = fetchHtmlFromFile('example.html')
+
+    birthdayUl = findBirthdayList(bs)
+
+    birthdays = extractBirthDays( birthdayUl )
+    
+    return 0
 
 # main program
-
-month, day = parse_commandline( sys.argv )
-if month is None or day is None:
-    exit(1)
-
-daystr = f"{month}月{day}日"
-
-daystrenc = parse.quote( daystr )
-url = f"https://ja.wikipedia.org/wiki/{daystrenc}"
-
-print( f"{daystr} 誕生日の有名人" )
-
-bs: bs4.BeautifulSoup = fetchHtml(url)
-# bs: bs4.BeautifulSoup = fetchHtmlFromFile('example.html')
-
-birthdayUl = findBirthdayList(bs)
-
-birthdays = extractBirthDays( birthdayUl )
+if __name__ == '__main__':
+    ret = main_process(sys.argv[1:])
+    exit(ret)

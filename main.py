@@ -73,20 +73,23 @@ def findBirthdayList( bs: bs4.BeautifulSoup ) -> bs4.element.Tag:
     titleSpan = elms[0]
     h2elm = titleSpan.parent
 
+    lis = []
     sibling = h2elm
     while sibling is not None:
         sibling = sibling.next_sibling
 
         if sibling.name == "ul":
+            lis.append( sibling )
+        elif sibling.name == "h2":
             break
 
-    if sibling is None:
+    if lis == []:
         print ("<ul> is not found.")
         return None
     # else:
     #     print(sibling)
 
-    return sibling
+    return lis
 
 
 def extractBirthDays(ul: bs4.element.Tag) -> list:
@@ -137,7 +140,6 @@ def parse_commandline( args:list ) -> (int, int):
         day = now.day
         return month, day
     
-        
 def main_process(args:list) -> (int):
 
     month, day = parse_commandline( args )
@@ -154,9 +156,10 @@ def main_process(args:list) -> (int):
     bs: bs4.BeautifulSoup = fetchHtml(url)
     # bs: bs4.BeautifulSoup = fetchHtmlFromFile('example.html')
 
-    birthdayUl = findBirthdayList(bs)
+    birthdayUlList = findBirthdayList(bs)
 
-    birthdays = extractBirthDays( birthdayUl )
+    for ul in birthdayUlList:
+        extractBirthDays( ul )
     
     return 0
 

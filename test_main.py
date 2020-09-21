@@ -39,7 +39,7 @@ class TestMain(unittest.TestCase):
                 ret = main.main_process( [ md ] )
                 self.assertEqual( ret, 0, f"[test_allDays]Failed Assertion: with {md}" )
                 
-                time.sleep(0.5)
+                time.sleep(2.0)
         
 # main
 if __name__ == '__main__':

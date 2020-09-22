@@ -3,20 +3,24 @@
 from urllib import request
 from urllib import parse
 import sys
-import requests
+import os
 import re
 import bs4
 import calendar
 from datetime import datetime
 
+from pathlib import Path
+
+
 import birthday
 
 def fetchHtml(url:str) -> bs4.BeautifulSoup:
+
+    # open
     response = request.urlopen(url)
+    soup = bs4.BeautifulSoup(response, features='html.parser')
 
-    example_soup = bs4.BeautifulSoup(response, features='html.parser')
-
-    return example_soup
+    return soup
 
 
 def fetchHtmlFromFile(htmlFile:str) -> bs4.BeautifulSoup:
@@ -103,7 +107,20 @@ def parse_commandline( args:list ) -> (int, int):
         month = now.month
         day = now.day
         return month, day
-    
+
+def saveHtml( soup:bs4.BeautifulSoup, month:int, day:int ):
+    # mkdir htmlsrc
+    outfullpath = os.path.dirname(os.path.abspath(__file__))
+    outfullpath = os.path.join( outfullpath, "htmlsrc" )
+
+    Path(outfullpath).mkdir(parents=True, exist_ok=True)
+
+    # save
+    outfullpath = os.path.join( outfullpath, f"src_{month}_{day}.html" )
+    with open(outfullpath, "w") as file:
+        file.write( str(soup) )
+
+
 def main_process(args:list) -> (int):
     '''主処理
     '''
@@ -121,6 +138,10 @@ def main_process(args:list) -> (int):
     bs: bs4.BeautifulSoup = fetchHtml(url)
     # bs: bs4.BeautifulSoup = fetchHtmlFromFile('example.html')
 
+    # save html
+    saveHtml(bs, month, day)
+
+    # find
     birthdayUlList = findBirthdayList(bs)
 
     for ul in birthdayUlList:

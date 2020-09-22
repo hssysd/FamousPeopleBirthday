@@ -9,7 +9,7 @@ import bs4
 import calendar
 from datetime import datetime
 
-YEAR_UNKNOWN: int = -1
+import birthday
 
 def fetchHtml(url:str) -> bs4.BeautifulSoup:
     response = request.urlopen(url)
@@ -26,42 +26,6 @@ def fetchHtmlFromFile(htmlFile:str) -> bs4.BeautifulSoup:
 
     return example_soup
 
-
-class Birthday:
-    year: int = 0
-    yearstr: str = ""
-    name: str = ""
-    occupation: str = ""
-
-def parseBirthday(text:str) -> Birthday:
-
-    ret = Birthday()
-
-    spl = text.split('-')
-    if spl is None or len(spl) < 2:
-        print("birthday parse error:" + text)
-        return None
-
-    # year
-    ret.yearstr = spl[0].strip()
-
-    matches = re.findall( r'(\d+?)年', ret.yearstr )
-    if len(matches) > 0:
-        m = matches[0]
-        ret.year = int(m)
-    else:
-        ret.year = YEAR_UNKNOWN
-
-    # name, occupation
-    namespl = spl[1].split("、")
-    if namespl is None or len(namespl) < 2:
-        ret.name = spl[1]
-    else:
-        ret.name = namespl[0].strip()
-        ret.occupation = namespl[1].strip()
-        ret.occupation = re.sub( r'[\t\n]', '', ret.occupation)
-
-    return ret
 
 def findBirthdayList( bs: bs4.BeautifulSoup ) -> bs4.element.Tag:
     elms = bs.select('#誕生日')
@@ -98,11 +62,11 @@ def extractBirthDays(ul: bs4.element.Tag) -> list:
 
     lis = ul.select("li")
     for li in lis:
-        b: Birthday = parseBirthday(li.get_text())
+        b: Birthday = birthday.parseBirthday(li.get_text())
         if b is None:
             continue
 
-        yearstr = b.yearstr if b.year == YEAR_UNKNOWN else str(b.year)
+        yearstr = b.yearstr if b.year == birthday.YEAR_UNKNOWN else str(b.year)
 
         print( yearstr + ": " + b.name + "    (" + b.occupation + ")" )
 
@@ -141,7 +105,8 @@ def parse_commandline( args:list ) -> (int, int):
         return month, day
     
 def main_process(args:list) -> (int):
-
+    '''主処理
+    '''
     month, day = parse_commandline( args )
     if month is None or day is None:
         return 1

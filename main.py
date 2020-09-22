@@ -15,7 +15,7 @@ from pathlib import Path
 import birthday
 
 def fetchHtml(url:str) -> bs4.BeautifulSoup:
-
+    '''htmlをダウンロードしてbs4インスタンスをつくる'''
     # open
     response = request.urlopen(url)
     soup = bs4.BeautifulSoup(response, features='html.parser')
@@ -24,6 +24,7 @@ def fetchHtml(url:str) -> bs4.BeautifulSoup:
 
 
 def fetchHtmlFromFile(htmlFile:str) -> bs4.BeautifulSoup:
+    '''htmlファイルからbs4インスタンスをつくる'''
     example_file = open(htmlFile, mode='r', encoding='utf_8')
 
     example_soup = bs4.BeautifulSoup(example_file, features='html.parser')
@@ -31,7 +32,8 @@ def fetchHtmlFromFile(htmlFile:str) -> bs4.BeautifulSoup:
     return example_soup
 
 
-def findBirthdayList( bs: bs4.BeautifulSoup ) -> bs4.element.Tag:
+def findBirthdayList( bs: bs4.BeautifulSoup ) -> list:
+    '''誕生日リストのul要素を探してリストにして返す'''
     elms = bs.select('#誕生日')
 
     if elms is None:
@@ -61,7 +63,7 @@ def findBirthdayList( bs: bs4.BeautifulSoup ) -> bs4.element.Tag:
 
 
 def extractBirthDays(ul: bs4.element.Tag) -> list:
-
+    '''ulタグ内のliから誕生日リストを全て取ってリストで返す'''
     ret = []
 
     lis = ul.select("li")
@@ -79,7 +81,7 @@ def extractBirthDays(ul: bs4.element.Tag) -> list:
     return ret
 
 def parse_commandline( args:list ) -> (int, int):
-    
+    '''コマンドライン解析'''
     if args is not None and len(args) >= 1:
         matchobj = re.match(r'(-?\d+)/(-?\d+)', args[0])
         if matchobj is None:
@@ -109,6 +111,7 @@ def parse_commandline( args:list ) -> (int, int):
         return month, day
 
 def saveHtml( soup:bs4.BeautifulSoup, month:int, day:int ):
+    '''ダウンロードしたwebページを保存する'''
     # mkdir htmlsrc
     outfullpath = os.path.dirname(os.path.abspath(__file__))
     outfullpath = os.path.join( outfullpath, "htmlsrc" )

@@ -1,20 +1,19 @@
-# coding:utf-8
+"""日本の有名人の誕生日を列挙するスクリプト"""
 
-from urllib import request
-from urllib import parse
 import sys
 import os
 import re
-import bs4
 import calendar
 from datetime import datetime
-
+from urllib import request
+from urllib import parse
 from pathlib import Path
 
+import bs4
 
 import birthday
 
-def fetchHtml(url:str) -> bs4.BeautifulSoup:
+def fetch_html(url:str) -> bs4.BeautifulSoup:
     '''htmlをダウンロードしてbs4インスタンスをつくる'''
     # open
     response = request.urlopen(url)
@@ -23,25 +22,29 @@ def fetchHtml(url:str) -> bs4.BeautifulSoup:
     return soup
 
 
-def fetchHtmlFromFile(htmlFile:str) -> bs4.BeautifulSoup:
+def fetch_html_file(htmlfilepath:str) -> bs4.BeautifulSoup:
     '''htmlファイルからbs4インスタンスをつくる'''
-    example_file = open(htmlFile, mode='r', encoding='utf_8')
+    htmlfile = open(htmlfilepath, mode='r', encoding='utf_8')
 
-    example_soup = bs4.BeautifulSoup(example_file, features='html.parser')
+    soup = bs4.BeautifulSoup(htmlfile, features='html.parser')
 
-    return example_soup
+    htmlfile.close()
+
+    return soup
 
 
-def findBirthdayList( bs: bs4.BeautifulSoup ) -> list:
-    '''誕生日リストのul要素を探してリストにして返す'''
+def find_birthday_list( bs: bs4.BeautifulSoup ) -> list:
+    '''誕生日リストのul要素を探してリストにして返す
+    （ドキュメントによっては、複数のulに分かれているのでリスト。）
+    '''
     elms = bs.select('#誕生日')
 
     if elms is None:
         print("birthday is not found")
         return None
 
-    titleSpan = elms[0]
-    h2elm = titleSpan.parent
+    title_span = elms[0]
+    h2elm = title_span.parent
 
     lis = []
     sibling = h2elm
@@ -50,7 +53,7 @@ def findBirthdayList( bs: bs4.BeautifulSoup ) -> list:
 
         if sibling.name == "ul":
             lis.append( sibling )
-        elif sibling.name == "h2":
+        elif sibling.name == "h2": # 次の章(h2)がきたら終了
             break
 
     if lis == []:
@@ -62,13 +65,12 @@ def findBirthdayList( bs: bs4.BeautifulSoup ) -> list:
     return lis
 
 
-def extractBirthDays(ul: bs4.element.Tag) -> list:
+def extract_birthdays(ultag: bs4.element.Tag) -> list:
     '''ulタグ内のliから誕生日リストを全て取ってリストで返す'''
     ret = []
-
-    lis = ul.select("li")
+    lis = ultag.select("li")
     for li in lis:
-        b: Birthday = birthday.parseBirthday(li.get_text())
+        b: birthday.Birthday = birthday.parse_birthday(li.get_text())
         if b is None:
             continue
 
@@ -110,7 +112,7 @@ def parse_commandline( args:list ) -> (int, int):
         day = now.day
         return month, day
 
-def saveHtml( soup:bs4.BeautifulSoup, month:int, day:int ):
+def save_html( soup:bs4.BeautifulSoup, month:int, day:int ):
     '''ダウンロードしたwebページを保存する'''
     # mkdir htmlsrc
     outfullpath = os.path.dirname(os.path.abspath(__file__))
@@ -120,13 +122,12 @@ def saveHtml( soup:bs4.BeautifulSoup, month:int, day:int ):
 
     # save
     outfullpath = os.path.join( outfullpath, f"src_{month}_{day}.html" )
-    with open(outfullpath, "w") as file:
+    with open(outfullpath, "w", encoding="utf_8") as file:
         file.write( str(soup) )
 
 
 def main_process(args:list) -> (int):
-    '''主処理
-    '''
+    '''主処理'''
     month, day = parse_commandline( args )
     if month is None or day is None:
         return 1
@@ -138,21 +139,21 @@ def main_process(args:list) -> (int):
 
     print( f"{daystr} 誕生日の有名人" )
 
-    bs: bs4.BeautifulSoup = fetchHtml(url)
-    # bs: bs4.BeautifulSoup = fetchHtmlFromFile('example.html')
+    bs: bs4.BeautifulSoup = fetch_html(url)
+    # bs: bs4.BeautifulSoup = fetch_html_file('example.html')
 
     # save html
-    saveHtml(bs, month, day)
+    save_html(bs, month, day)
 
     # find
-    birthdayUlList = findBirthdayList(bs)
+    birthday_ullist = find_birthday_list(bs)
 
-    for ul in birthdayUlList:
-        extractBirthDays( ul )
-    
+    for ul in birthday_ullist:
+        extract_birthdays( ul )
+
     return 0
 
 # main program
 if __name__ == '__main__':
-    ret = main_process(sys.argv[1:])
-    exit(ret)
+    retcode = main_process(sys.argv[1:])
+    sys.exit(retcode)

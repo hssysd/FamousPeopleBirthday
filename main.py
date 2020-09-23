@@ -33,11 +33,11 @@ def fetch_html_file(htmlfilepath:str) -> bs4.BeautifulSoup:
     return soup
 
 
-def find_birthday_list( bs: bs4.BeautifulSoup ) -> list:
+def find_birthday_list( soup: bs4.BeautifulSoup ) -> list:
     '''誕生日リストのul要素を探してリストにして返す
     （ドキュメントによっては、複数のulに分かれているのでリスト。）
     '''
-    elms = bs.select('#誕生日')
+    elms = soup.select('#誕生日')
 
     if elms is None:
         print("birthday is not found")
@@ -68,17 +68,17 @@ def find_birthday_list( bs: bs4.BeautifulSoup ) -> list:
 def extract_birthdays(ultag: bs4.element.Tag) -> list:
     '''ulタグ内のliから誕生日リストを全て取ってリストで返す'''
     ret = []
-    lis = ultag.select("li")
-    for li in lis:
-        b: birthday.Birthday = birthday.parse_birthday(li.get_text())
-        if b is None:
+    li_elms = ultag.select("li")
+    for litag in li_elms:
+        brtdy: birthday.Birthday = birthday.parse_birthday(litag.get_text())
+        if brtdy is None:
             continue
 
-        yearstr = b.yearstr if b.year == birthday.YEAR_UNKNOWN else str(b.year)
+        yearstr = brtdy.yearstr if brtdy.year == birthday.YEAR_UNKNOWN else str(brtdy.year)
 
-        print( yearstr + ": " + b.name + "    (" + b.occupation + ")" )
+        print( yearstr + ": " + brtdy.name + "    (" + brtdy.occupation + ")" )
 
-        ret.append(b)
+        ret.append(brtdy)
 
     return ret
 
@@ -90,19 +90,19 @@ def parse_commandline( args:list ) -> (int, int):
             print("Error: mm/dd 形式で指定してください: -> " + args[0])
             return None, None
 
-        m = matchobj.group(1)
-        d = matchobj.group(2)
-        month = int(m)
-        day = int(d)
+        mgrp = matchobj.group(1)
+        dgrp = matchobj.group(2)
+        month = int(mgrp)
+        day = int(dgrp)
 
         if month < 1 or month > 12:
-            print("Error: '月' の値が不正です -> " + m)
+            print("Error: '月' の値が不正です -> " + mgrp)
             return None, None
-        
-        maxDay = calendar.monthrange( 2020, month )[1]
-        
-        if day < 1 or day > maxDay:
-            print("Error: '日' の値が不正です -> " + d)
+
+        max_day = calendar.monthrange( 2020, month )[1]
+
+        if day < 1 or day > max_day:
+            print("Error: '日' の値が不正です -> " + dgrp)
             return None, None
 
         return month, day
@@ -139,17 +139,17 @@ def main_process(args:list) -> (int):
 
     print( f"{daystr} 誕生日の有名人" )
 
-    bs: bs4.BeautifulSoup = fetch_html(url)
-    # bs: bs4.BeautifulSoup = fetch_html_file('example.html')
+    soup: bs4.BeautifulSoup = fetch_html(url)
+    # soup: bs4.BeautifulSoup = fetch_html_file('example.html')
 
     # save html
-    save_html(bs, month, day)
+    save_html(soup, month, day)
 
     # find
-    birthday_ullist = find_birthday_list(bs)
+    birthday_ullist = find_birthday_list(soup)
 
-    for ul in birthday_ullist:
-        extract_birthdays( ul )
+    for ultag in birthday_ullist:
+        extract_birthdays( ultag )
 
     return 0
 

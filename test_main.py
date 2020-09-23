@@ -7,12 +7,12 @@ import unittest
 import main
 
 class TestMain(unittest.TestCase):
-    # TODO: 範囲外の月/日を入力された時のテスト
-    def test_invalidMonthAndDays(self):
+    """mainのテスト"""
+    def test_invalid_month_and_days(self):
         '''無効な月日を入力された時のテスト'''
-        
+
         # month, day, expected return value
-        testInputs = [
+        test_inputs = [
             [ 0, 0, 1 ],
             [ 1, 1, 0 ],
             [ 2, 30, 1],
@@ -20,15 +20,14 @@ class TestMain(unittest.TestCase):
             [ 1, -1, 1],
             [ 13, 1, 1],
         ]
-        
-        for ti in testInputs:
+
+        for ti in test_inputs:
             md = f'{ti[0]}/{ti[1]}'
             print( f'======== {md} ========' )
             ret = main.main_process( [md] )
             self.assertEqual( ret, ti[2], f"[test_monthAndDays]Failed Assertion: with {md}" )
-        
-    
-    def test_allDays(self):
+
+    def test_alldays(self):
         '''全ての月日を入力して正しく取得できるかどうかテスト'''
         for month in range( 1, 12+1 ):
             mr = calendar.monthrange( 2020, month ) # 2020年は閏年
@@ -38,9 +37,9 @@ class TestMain(unittest.TestCase):
                 print( f'======== {md} ========' )
                 ret = main.main_process( [ md ] )
                 self.assertEqual( ret, 0, f"[test_allDays]Failed Assertion: with {md}" )
-                
+
                 time.sleep(2.0)
-        
+
 # main
 if __name__ == '__main__':
     unittest.main(verbosity=2)
